@@ -285,9 +285,15 @@
 
   /* "Why is this here" signal row -- added 2026-07-14. Separate from the
      Area/Region tagrow above since it answers a different question. Only
-     rendered when a posting has j.signals; postings on a self-evidently
-     HR/LR board (e.g. a school's own HR department listing) get no row at
-     all, to keep the badge from becoming visual noise on the obvious cases. */
+     rendered when a posting has j.signals -- but as of 2026-07-14 that's no
+     longer about hiding badges on "obvious" postings. Originally the plan
+     was to suppress this for self-evidently LR/HR listings to cut noise,
+     but the user overrode that (National Chengchi's posting explicitly
+     says "Labor Relations" and gets tagged "IR/ER in Ad" despite its Area
+     already being "LR") -- explicit ad language is worth surfacing even
+     when redundant with the Area tag. A posting simply has no row if
+     nobody has found (or looked for) tag-worthy evidence for it yet, not
+     because the evidence was suppressed as obvious. */
   .signalrow {
     display: flex;
     flex-wrap: wrap;
