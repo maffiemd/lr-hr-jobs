@@ -67,6 +67,9 @@ def format_rank(raw):
 # whenever a new listing gets this kind of audit. Kept in sync by hand with
 # the same dict in the local (non-GitHub-Actions) copy of this script.
 SIGNALS = {
+    # On the IR-programs reference sheet (row 63) as an IR-friendly business
+    # school -- COBE's Dept of Management offers a SHRM-aligned BBA in HR.
+    "Boise State": ["ER-Friendly B-School"],
     "University of California, Berkeley": ["Labor Center/Institute Affiliation"],
     "University of York": ["IR/ER in Ad"],
     "Worcester Polytechnic Institute": ["IR/ER Faculty"],
