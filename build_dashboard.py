@@ -76,7 +76,7 @@ SIGNALS = {
     # Resources and Industrial Relations research group -- added to the
     # IR-programs reference sheet (row 64) 2026-07-14 -- plus the posting's
     # own title names "Employment Relations" outright.
-    "Monash University": ["ER-Friendly B-School", "IR/ER in Ad"],
+    "Monash University": ["ER-Friendly B-School", "IR/ER in Ad", "Inclusive Journal List"],
 }
 
 
