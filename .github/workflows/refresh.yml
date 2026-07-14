@@ -1,0 +1,38 @@
+name: Refresh dashboard
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-dashboard
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build index.html from the sheet
+        run: python3 build_dashboard.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No changes, nothing to publish."
+            exit 0
+          fi
+          git add index.html
+          git commit -m "Automated refresh: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push
