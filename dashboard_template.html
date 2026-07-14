@@ -1,4 +1,5 @@
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Labor Relations &amp; HR Faculty Postings</title>
 <style>
   :root {
@@ -201,6 +202,13 @@
     margin: -8px 0 22px;
   }
 
+  .sort-group { margin-left: auto; }
+
+  /* Region/Area dropdown alternative to the chip rows -- hidden on desktop,
+     swapped in on mobile (see media query below) so phones get a compact
+     select instead of a long row of wrapping buttons. */
+  .mobile-filter-sel { display: none; }
+
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -335,9 +343,59 @@
     * { transition: none !important; }
   }
 
-  @media (max-width: 560px) {
+  /* Mobile pass (added 2026-07-14): stack the card grid to a single column
+     and bump up font sizes / touch-target padding for phone-width viewports.
+     Scoped entirely to this media query -- desktop layout above is untouched. */
+  @media (max-width: 640px) {
+    .wrap { padding-left: 16px; padding-right: 16px; }
+
     header.top { flex-direction: column; }
     a.discord-btn { align-self: flex-start; }
+
+    .title-block h1 { font-size: 26px; }
+    .title-block p { font-size: 15px; }
+
+    .stat-strip { gap: 20px; }
+    .stat .num { font-size: 24px; }
+    .stat .label { font-size: 11.5px; }
+
+    .controls { flex-direction: column; align-items: stretch; gap: 14px; }
+    .control-group { gap: 10px; }
+    .control-group:not(.sort-group) { flex-wrap: nowrap; }
+    .chip { font-size: 14px; padding: 8px 14px; }
+    /* Fixed width (rather than sizing to the selected option's text) so
+       Region/Area/Sort render as the same size regardless of which option
+       is currently selected in each -- established 2026-07-14. */
+    select.sortsel { font-size: 14px; padding: 9px 32px 9px 14px; width: 180px; }
+
+    /* Sort moves first (left/top) on mobile instead of being pushed to the
+       far right via margin-left:auto -- established 2026-07-14. Desktop is
+       untouched since `order` defaults to 0 outside this media query. */
+    .sort-group { margin-left: 0; order: -1; }
+
+    /* Region/Area become a single dropdown each instead of a wrapping row
+       of chip buttons -- established 2026-07-14. */
+    #regionChips, #areaChips { display: none; }
+    /* Sized the same as the Sort dropdown (both share .sortsel) rather than
+       stretching full-width -- established 2026-07-14. */
+    .mobile-filter-sel { display: block; }
+
+    .count-line { font-size: 13.5px; }
+
+    .grid { grid-template-columns: 1fr; gap: 14px; }
+
+    .card { padding: 18px 18px 16px; gap: 14px; }
+    .card h2 { font-size: 21px; padding-right: 72px; }
+    .card .rank { font-size: 15px; }
+
+    .tag { font-size: 12px; padding: 4px 10px; }
+
+    .meta { font-size: 14.5px; gap: 6px 10px; }
+
+    .due { font-size: 13.5px; }
+    a.view { font-size: 14.5px; }
+
+    footer { font-size: 13.5px; }
   }
 </style>
 
@@ -363,12 +421,14 @@
     <div class="control-group">
       <span class="gl">Region</span>
       <div id="regionChips"></div>
+      <select class="sortsel mobile-filter-sel" id="regionSel" aria-label="Filter by region"></select>
     </div>
     <div class="control-group">
       <span class="gl">Area</span>
       <div id="areaChips"></div>
+      <select class="sortsel mobile-filter-sel" id="areaSel" aria-label="Filter by area"></select>
     </div>
-    <div class="control-group" style="margin-left:auto;">
+    <div class="control-group sort-group">
       <span class="gl">Sort</span>
       <select class="sortsel" id="sortSel">
         <option value="due">Deadline (soonest)</option>
@@ -451,6 +511,23 @@ let sortMode = 'due';
 const regions = ['All', ...Array.from(new Set(JOBS.map(j => j.region))).sort()];
 const areas = ['All', ...sortAreas(Array.from(new Set(JOBS.flatMap(j => j.area))))];
 
+// Mobile dropdown alternative to the region/area chip rows -- options are
+// static once JOBS loads, so populate them once here rather than rebuilding
+// on every render() call the way the chip buttons do.
+function populateSelect(selId, items) {
+  const sel = document.getElementById(selId);
+  items.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item;
+    opt.textContent = item;
+    sel.appendChild(opt);
+  });
+}
+populateSelect('regionSel', regions);
+populateSelect('areaSel', areas);
+document.getElementById('regionSel').addEventListener('change', (e) => { activeRegion = e.target.value; render(); });
+document.getElementById('areaSel').addEventListener('change', (e) => { activeArea = e.target.value; render(); });
+
 function renderChips(containerId, items, active, onPick) {
   const el = document.getElementById(containerId);
   el.innerHTML = '';
@@ -466,6 +543,8 @@ function renderChips(containerId, items, active, onPick) {
 function render() {
   renderChips('regionChips', regions, activeRegion, (r) => { activeRegion = r; render(); });
   renderChips('areaChips', areas, activeArea, (a) => { activeArea = a; render(); });
+  document.getElementById('regionSel').value = activeRegion;
+  document.getElementById('areaSel').value = activeArea;
 
   let filtered = JOBS.filter(j =>
     (activeRegion === 'All' || j.region === activeRegion) &&
