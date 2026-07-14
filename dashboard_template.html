@@ -24,6 +24,12 @@
     --on-accent: #fff9ec;
     --shadow: 0 1px 2px rgba(18,18,18,0.08), 0 8px 24px -12px rgba(18,18,18,0.16);
     --radius: 14px;
+    /* Signal badge ("why is this here") -- added 2026-07-14. A cool blue-teal,
+       deliberately distinct from the warm gold Area tags and neutral Region
+       outline, since it answers a different question than either of those. */
+    --signal: #3d6b8a;
+    --signal-ink: #1f4a63;
+    --signal-wash: #dfeaf1;
   }
 
   :root[data-theme="dark"] {
@@ -47,6 +53,9 @@
     --control-bg: #423826;
     --on-accent: #1a1204;
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 30px -14px rgba(0,0,0,0.55);
+    --signal: #7fb3d5;
+    --signal-ink: #a8d1e8;
+    --signal-wash: #1c2e38;
   }
 
   /* Deliberately NOT auto-switching on prefers-color-scheme (removed
@@ -273,6 +282,30 @@
     color: var(--accent-ink);
   }
   .tag.region { background: transparent; border: 1px solid var(--line); color: var(--ink-faint); font-weight: 500; }
+
+  /* "Why is this here" signal row -- added 2026-07-14. Separate from the
+     Area/Region tagrow above since it answers a different question. Only
+     rendered when a posting has j.signals; postings on a self-evidently
+     HR/LR board (e.g. a school's own HR department listing) get no row at
+     all, to keep the badge from becoming visual noise on the obvious cases. */
+  .signalrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: -4px;
+  }
+  .signal-label {
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .tag.signal {
+    background: var(--signal-wash);
+    color: var(--signal-ink);
+    border: 1px solid transparent;
+  }
 
   .meta {
     display: grid;
@@ -501,7 +534,10 @@ function annualizeSalary(salaryStr) {
   const numbers = salaryStr.match(/[\d,]+(?:\.\d+)?/g);
   if (!numbers) return salaryStr;
   const annualized = numbers.map(n => Math.round(parseFloat(n.replace(/,/g, '')) * 12).toLocaleString('en-US'));
-  return `${symbol}${annualized.join('–')}/year`;
+  // No "/year" suffix -- established 2026-07-14, at the user's call: annualized
+  // academic salaries are unambiguously not monthly figures at this magnitude,
+  // so the label was redundant.
+  return `${symbol}${annualized.join('–')}`;
 }
 
 let activeRegion = 'All';
@@ -590,11 +626,17 @@ function render() {
     const daysText = days === null ? 'no stated deadline' : (days < 0 ? 'closed' : (days === 0 ? 'today' : `${days}d`));
     const dueLabel = j.due ? `Due ${fmtDate(j.due)} &middot; ` : '';
 
+    const signals = j.signals || [];
+    const signalRow = signals.length
+      ? `<div class="signalrow"><span class="signal-label">Why it's here</span>${signals.map(s => `<span class="tag signal">${s}</span>`).join('')}</div>`
+      : '';
+
     card.innerHTML = `
       <span class="urgency-tag ${uClass}">${urgencyLabel(days)}</span>
       <h2>${j.university}</h2>
       <div class="rank">${j.rank} &middot; ${j.tt}</div>
       <div class="tagrow">${areaTags}<span class="tag region">${j.region}</span></div>
+      ${signalRow}
       <div class="meta">
         <div class="k">Location</div><div class="v">${j.location}</div>
         ${salaryRow}

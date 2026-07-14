@@ -58,6 +58,23 @@ def format_rank(raw):
     return raw
 
 
+# "Why is this here" signal tags, keyed by exact University column value.
+# Manually maintained per the audit each school got (see the LR/HR project's
+# memory files: feedback_lr_hr_er_ir_screening_rubric, reference_ir_program_list)
+# -- established 2026-07-14. Not sheet-driven (yet): populating this requires
+# actual research judgment per school, not just structured data entry, so it
+# lives here rather than as a new Active Jobs column for now. Add an entry
+# whenever a new listing gets this kind of audit. Kept in sync by hand with
+# the same dict in the local (non-GitHub-Actions) copy of this script.
+SIGNALS = {
+    "University of California, Berkeley": ["Labor Center/Institute Affiliation"],
+    "University of York": ["IR/ER in Ad"],
+    "Worcester Polytechnic Institute": ["IR/ER Faculty"],
+    "China Europe International Business School (CEIBS)": ["IR/ER in Ad"],
+    "IE Business School": ["IR/ER Faculty"],
+}
+
+
 def build_job(row, today):
     due = parse_date(row.get("Due Date"))
     posted = parse_date(row.get("Post Date"))
@@ -85,6 +102,7 @@ def build_job(row, today):
         "posted": posted.isoformat() if posted else "",
         "due": due.isoformat() if due else "",
         "link": link,
+        "signals": SIGNALS.get(university, []),
     }
 
 
