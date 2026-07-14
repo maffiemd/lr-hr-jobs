@@ -72,6 +72,11 @@ SIGNALS = {
     "Worcester Polytechnic Institute": ["IR/ER Faculty"],
     "China Europe International Business School (CEIBS)": ["IR/ER in Ad"],
     "IE Business School": ["IR/ER Faculty"],
+    # Monash Business School's Dept of Management runs a dedicated Human
+    # Resources and Industrial Relations research group -- added to the
+    # IR-programs reference sheet (row 64) 2026-07-14 -- plus the posting's
+    # own title names "Employment Relations" outright.
+    "Monash University": ["ER-Friendly B-School", "IR/ER in Ad"],
 }
 
 
