@@ -102,6 +102,12 @@
     max-width: 52ch;
   }
 
+  .title-block .practitioner-note {
+    margin-top: 10px;
+    font-size: 13.5px;
+    color: var(--ink-faint);
+  }
+
   .stat-strip {
     display: flex;
     gap: clamp(18px, 3vw, 34px);
@@ -414,6 +420,7 @@
     <div class="title-block">
       <h1>Labor Relations &amp; HR Faculty Postings</h1>
       <p>Live tracker of open academic positions in Labor Relations, Employment Relations, Human Resources, and adjacent fields — sourced from the daily job-board scan and refreshed every day.</p>
+      <p class="practitioner-note">Looking for a practitioner (non-academic) labor relations role instead? <a class="contact" href="https://www.leraweb.org/job-board" target="_blank" rel="noopener">Browse the LERA Job Board →</a></p>
     </div>
   </header>
 
@@ -449,13 +456,13 @@
   <div class="grid" id="grid"></div>
 
   <footer>
-    <span>Data synced from the Active Jobs sheet · <span id="genDate">22 Jul 2026</span></span>
+    <span>Data synced from the Active Jobs sheet · <span id="genDate">23 Jul 2026</span></span>
     <span>Questions about this list? <a class="contact" href="mailto:maffie@cornell.edu">maffie@cornell.edu</a></span>
   </footer>
 </div>
 
 <script>
-const TODAY = new Date('2026-07-22T00:00:00');
+const TODAY = new Date('2026-07-23T00:00:00');
 
 // Labor Relations and Employment Relations are never subordinated to HR in
 // this listing -- both the filter-chip order and each card's tag order
