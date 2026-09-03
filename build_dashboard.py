@@ -244,9 +244,20 @@ def main():
     with open(TEMPLATE_PATH, encoding="utf-8") as f:
         template = f.read()
 
+    # Boards-monitored count is a hand-maintained literal here (unlike the
+    # local build_dashboard.py, which imports run.py directly to compute
+    # this dynamically -- see that file's count_boards_monitored()) --
+    # this copy runs standalone inside the lr-hr-jobs repo (see module
+    # docstring), which never has run.py checked out at all, so there's
+    # nothing to import. Update by hand when run.py's SITES count changes
+    # (len(SITES) + 2 for the two Browser-tool-only sites, UW-Madison and
+    # HigherEdJobs -- 176 + 2 = 178 as of 2026-09-03).
+    BOARDS_MONITORED = 178
+
     html = template.replace("__TODAY_ISO__", today.isoformat())
     html = html.replace("__GENERATED_STR__", today.strftime("%-d %b %Y"))
     html = html.replace("__JOBS_JSON__", json.dumps(jobs, ensure_ascii=False))
+    html = html.replace("__BOARDS_MONITORED__", str(BOARDS_MONITORED))
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         f.write(html)
