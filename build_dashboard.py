@@ -181,6 +181,15 @@ def build_job(row, today, institution_signals, carnegie_classifications):
                 teaching = CARNEGIE_BUCKET_LOAD[bucket]
                 teaching_inferred = True
 
+    # Collapse any "N/A (...)" variant -- including ones typed directly into
+    # the Sheet's own Teaching load cell -- down to a bare "N/A". A
+    # parenthetical explanation is useful context but blows out the
+    # dashboard's Teaching load column width; the reasoning belongs in the
+    # Sheet cell for the record, not in the rendered card. Kept in sync with
+    # the local build_dashboard.py by hand -- see this file's module docstring.
+    if teaching.strip().lower().startswith("n/a"):
+        teaching = "N/A"
+
     return {
         "university": university,
         "rank": format_rank(row.get("Rank")),
