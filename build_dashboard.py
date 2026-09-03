@@ -26,7 +26,17 @@ CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&
 IR_PROGRAMS_CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={IR_PROGRAMS_GID}"
 TEMPLATE_PATH = f"{DIR}/dashboard_template.html"
 OUTPUT_PATH = f"{DIR}/index.html"
+CARNEGIE_PATH = f"{DIR}/carnegie-classification.json"
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+
+# Render-time-only fallback (added 2026-09-02) for a row whose Teaching load
+# cell is genuinely blank in the Sheet -- never written back into the Sheet
+# itself, unlike teaching-load-lookup.json's institution-specific figures.
+# See carnegie-classification.json's docstring for why these three buckets
+# and not a finer scale. Kept in sync with the local build_dashboard.py by
+# hand -- this copy runs standalone inside the lr-hr-jobs repo (see module
+# docstring), so it can't just import the local one.
+CARNEGIE_BUCKET_LOAD = {"R1": "2-2", "R2": "2-3", "Teaching": "3-3"}
 
 DATE_FORMATS = ["%m/%d/%Y", "%Y-%m-%d", "%B %d, %Y", "%b %d, %Y"]
 
@@ -77,6 +87,25 @@ def lookup_institution_signals(university, institution_signals):
     return []
 
 
+def load_carnegie_classifications():
+    with open(CARNEGIE_PATH, encoding="utf-8") as f:
+        return json.load(f).get("entries", {})
+
+
+def lookup_carnegie_bucket(university, classifications):
+    """Same exact-match-then-prefix-match approach as
+    lookup_institution_signals() -- small curated dataset, no need for full
+    fuzzy matching."""
+    if university in classifications:
+        return classifications[university]
+    u_norm = university.strip().lower()
+    for inst, bucket in classifications.items():
+        i_norm = inst.strip().lower()
+        if u_norm.startswith(i_norm) or i_norm.startswith(u_norm):
+            return bucket
+    return None
+
+
 def parse_date(raw):
     raw = (raw or "").strip()
     if not raw:
@@ -100,7 +129,7 @@ def format_rank(raw):
     return raw
 
 
-def build_job(row, today, institution_signals):
+def build_job(row, today, institution_signals, carnegie_classifications):
     due = parse_date(row.get("Due Date"))
     posted = parse_date(row.get("Post Date"))
     expired_flag = (row.get("Expired?") or "").strip().lower() == "yes"
@@ -124,6 +153,34 @@ def build_job(row, today, institution_signals):
         if s not in signals:
             signals.append(s)
 
+    # Teaching load: use the Sheet's own value if it states one (ad-stated,
+    # or a previously-composed '~institution-lookup' figure -- both count as
+    # "the Sheet has an answer"). Only when the cell is genuinely blank do we
+    # fall back to a live, render-time Carnegie-bucket inference -- this
+    # never gets written back into the Sheet, so the Sheet itself stays a
+    # faithful record of what was actually stated. See carnegie-
+    # classification.json's docstring.
+    #
+    # PostDoc rows are an exception (added 2026-09-02, at the user's request):
+    # a Carnegie-bucket figure describes a department's standing faculty
+    # teaching load, not a postdoc's -- most postdocs teach nothing or teach
+    # occasionally, so bucketing them by R1/R2/Teaching like a TT line is
+    # actively misleading. Only trust a real number for a postdoc when the
+    # Sheet's own cell states one directly (that's the ad itself giving a
+    # clear signal the postdoc must teach); a genuinely blank cell means
+    # "N/A", not an inferred bucket.
+    is_postdoc = (row.get("TT-NTT-PostDoc") or "").strip().lower() == "postdoc"
+    teaching = (row.get("Teaching load") or "").strip()
+    teaching_inferred = False
+    if not teaching:
+        if is_postdoc:
+            teaching = "N/A"
+        else:
+            bucket = lookup_carnegie_bucket(university, carnegie_classifications)
+            if bucket:
+                teaching = CARNEGIE_BUCKET_LOAD[bucket]
+                teaching_inferred = True
+
     return {
         "university": university,
         "rank": format_rank(row.get("Rank")),
@@ -132,7 +189,8 @@ def build_job(row, today, institution_signals):
         "location": (row.get("Location") or "").strip(),
         "region": (row.get("Region") or "").strip(),
         "salary": (row.get("Salary") or "").strip(),
-        "teaching": (row.get("Teaching load") or "").strip(),
+        "teaching": teaching,
+        "teachingInferred": teaching_inferred,
         "posted": posted.isoformat() if posted else "",
         "due": due.isoformat() if due else "",
         "link": link,
@@ -158,10 +216,19 @@ def main():
         print(f"ERROR fetching IR-programs CSV: {e}", file=sys.stderr)
         institution_signals = {}
 
+    try:
+        carnegie_classifications = load_carnegie_classifications()
+    except Exception as e:
+        # Non-fatal: dashboard still builds, just without the inferred-load
+        # fallback for this run (rows with a blank Teaching load stay blank
+        # instead of getting a bucketed estimate).
+        print(f"ERROR loading carnegie-classification.json: {e}", file=sys.stderr)
+        carnegie_classifications = {}
+
     reader = csv.DictReader(io.StringIO(csv_text))
     jobs = []
     for row in reader:
-        job = build_job(row, today, institution_signals)
+        job = build_job(row, today, institution_signals, carnegie_classifications)
         if job:
             jobs.append(job)
 

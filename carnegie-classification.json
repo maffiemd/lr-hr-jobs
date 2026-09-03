@@ -1,0 +1,17 @@
+{
+  "_readme": "University -> Carnegie Classification bucket, used ONLY by build_dashboard.py as an automatic, render-time fallback when a row's Teaching load cell is blank in the Sheet itself -- never write these values into the Sheet directly, unlike teaching-load-lookup.json's institution-specific figures. This file only covers US institutions (Carnegie Classification doesn't apply internationally) and only buckets a school when its classification is unambiguous -- a school with a genuinely mixed/unclear classification (e.g. 'Doctoral/Professional' rather than R1/R2, like University of St. Thomas MN) is deliberately left out rather than force-fit into a bucket. Bucket -> inferred course load mapping lives in build_dashboard.py: R1 = '2-2', R2 = '2-3', Teaching = '3-3'. Seeded 2026-09-02; meant to grow opportunistically like teaching-load-lookup.json.",
+  "_bucket_definitions": "R1 = Carnegie 'Very High Research Activity' (or post-2025 equivalent). R2 = Carnegie 'High Research Activity'. Teaching = no R1/R2 research designation -- Baccalaureate, Master's, or professions-focused institutions with a primary teaching mission.",
+  "_checked_and_excluded": "Schools explicitly researched and deliberately left OUT of entries, so a future pass doesn't re-spend an agent on them. University of St. Thomas (MN) and Alvernia University: both checked 2026-09 and both carry Carnegie's 'Doctoral/Professional Universities' classification (Alvernia reportedly R3, i.e. moderate research activity) -- neither is R1, R2, nor a clean no-research-designation Teaching school, so neither fits this file's 3-bucket scheme. If a 4th bucket for 'Doctoral/Professional' or R3 is ever added, revisit both.",
+  "entries": {
+    "Wingate University": "Teaching",
+    "Southern Virginia University": "Teaching",
+    "Worcester State University": "Teaching",
+    "Midway University": "Teaching",
+    "University of Mount Olive": "Teaching",
+    "Abilene Christian University": "R2",
+    "Worcester Polytechnic Institute": "R1",
+    "Harvard University": "R1",
+    "University of California, Berkeley": "R1",
+    "Cornell University": "R1"
+  }
+}
