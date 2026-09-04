@@ -327,8 +327,22 @@
     font-size: 19px;
     font-weight: 600;
     margin: 0;
-    padding-right: 76px;
+    /* Reserves room for the urgency tag, which is absolutely positioned
+       (top:18px; right:18px) rather than flowed in-line -- padding is the
+       only thing stopping the title's own text from rendering underneath
+       it. Sized to the longest possible label ("Closing this month", ~135px
+       rendered at the tag's fixed 11px font, measured live 2026-09-04) plus
+       headroom, not the ~76px guess this used to be, which was too narrow
+       for that label and caused a visible collision with the school name
+       on desktop (confirmed 2026-09-04) -- and, on mobile, needed a whole
+       separate position:static/stacked-layout override to work around the
+       same undersizing. One generous fixed value works at every viewport
+       (the tag's own font-size never changes across breakpoints, so this
+       doesn't need to either), which is why that mobile override was
+       removed rather than tuned again. */
+    padding-right: 148px;
     line-height: 1.25;
+    overflow-wrap: break-word;
   }
 
   .card .rank {
@@ -507,16 +521,14 @@
     .grid { grid-template-columns: 1fr; gap: 14px; }
 
     .card { padding: 18px 18px 16px; gap: 14px; }
-    /* The urgency tag is absolutely positioned over the title on desktop,
-       with h2's padding-right reserving just enough room for it -- but that
-       reserved width was tuned for the tag's rendered size at desktop's
-       11px tag font, and doesn't scale with the bigger 21px mobile title
-       font or long labels like "Closing this month". Rather than guess a
-       bigger padding number, drop the absolute positioning on mobile so the
-       tag flows as a normal stacked flex item above the title instead --
-       fixed 2026-09-04 after a reported title/tag collision on mobile. */
-    .card .urgency-tag { position: static; align-self: flex-start; }
-    .card h2 { font-size: 21px; padding-right: 0; }
+    /* No mobile-specific urgency-tag/h2 override needed anymore -- the base
+       .card h2 padding-right (148px) is already sized for the tag's widest
+       label and the tag's font-size never changes at this breakpoint, so
+       the same reserved space works here too. (A separate position:static
+       stacked-layout override lived here briefly, 2026-09-04, but was
+       replaced the same day by fixing the padding at its source instead of
+       patching around it per-breakpoint -- see .card h2's own comment.) */
+    .card h2 { font-size: 21px; }
     .card .rank { font-size: 15px; }
 
     .tag { font-size: 12px; padding: 4px 10px; }
