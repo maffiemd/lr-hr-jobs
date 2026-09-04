@@ -507,7 +507,16 @@
     .grid { grid-template-columns: 1fr; gap: 14px; }
 
     .card { padding: 18px 18px 16px; gap: 14px; }
-    .card h2 { font-size: 21px; padding-right: 72px; }
+    /* The urgency tag is absolutely positioned over the title on desktop,
+       with h2's padding-right reserving just enough room for it -- but that
+       reserved width was tuned for the tag's rendered size at desktop's
+       11px tag font, and doesn't scale with the bigger 21px mobile title
+       font or long labels like "Closing this month". Rather than guess a
+       bigger padding number, drop the absolute positioning on mobile so the
+       tag flows as a normal stacked flex item above the title instead --
+       fixed 2026-09-04 after a reported title/tag collision on mobile. */
+    .card .urgency-tag { position: static; align-self: flex-start; }
+    .card h2 { font-size: 21px; padding-right: 0; }
     .card .rank { font-size: 15px; }
 
     .tag { font-size: 12px; padding: 4px 10px; }
