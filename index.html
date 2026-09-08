@@ -159,6 +159,88 @@
     color: var(--ink-faint);
   }
 
+  /* Conference paper-submission deadlines -- added 2026-09-08. A small,
+     hand-curated list (CONFERENCES in the script below), not sourced from
+     the Active Jobs sheet like everything else on the page -- there's no
+     feed for conference CFP deadlines the way there is for job postings,
+     so this needs a human to update it as each conference's next cycle is
+     announced. Styled as its own strip between the stat numbers and the
+     job filters so it reads as "also worth knowing" rather than blending
+     into the job list below it. */
+  /* Collapsible section header (added 2026-09-08, at the user's request) --
+     a plain button rather than a summary/details element so the chevron's
+     rotation and the section's own show/hide can share one class of
+     styling with any future collapsible section, and so state can persist
+     via localStorage the same way the Cards/Table view preference does. */
+  .section-toggle {
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 0;
+    margin-bottom: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font: inherit;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .section-toggle:hover { color: var(--ink); }
+  .section-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .section-toggle .chevron {
+    width: 10px;
+    height: 10px;
+    flex: none;
+    transition: transform 0.15s;
+  }
+  .section-toggle[aria-expanded="false"] .chevron { transform: rotate(-90deg); }
+  .conf-strip[hidden] { display: none; }
+  .conf-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .conf-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px 16px 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .conf-name {
+    font-family: Georgia, "Iowan Old Style", serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--accent-ink);
+  }
+  .conf-full { font-size: 12.5px; color: var(--ink-soft); }
+  .conf-where { font-size: 11.5px; color: var(--ink-faint); margin-bottom: 6px; }
+  a.conf-due {
+    margin-top: auto;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-bottom: 1px solid transparent;
+  }
+  a.conf-due:hover { border-bottom-color: currentColor; }
+  a.conf-due.urgent { color: var(--urgent); }
+  a.conf-due.soon { color: var(--soon); }
+  a.conf-due.calm { color: var(--calm); }
+  a.conf-due.tbd { color: var(--ink-faint); font-style: italic; font-weight: 500; }
+  .conf-days { font-variant-numeric: tabular-nums; }
+
   .controls {
     display: flex;
     flex-wrap: wrap;
@@ -632,6 +714,8 @@
     a.view { font-size: 14.5px; }
 
     footer { font-size: 13.5px; }
+
+    .conf-strip { grid-template-columns: 1fr; gap: 12px; }
   }
 </style>
 
@@ -648,6 +732,12 @@
       </a>
     </div>
   </header>
+
+  <button class="section-toggle" id="confToggle" aria-expanded="true" aria-controls="confStrip">
+    <svg class="chevron" viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M1 1.5l5 5 5-5"/></svg>
+    Conference Paper Deadlines
+  </button>
+  <div class="conf-strip" id="confStrip"></div>
 
   <div class="stat-strip">
     <div class="stat"><span class="num" id="statActive">–</span><span class="label">Active postings</span></div>
@@ -740,6 +830,78 @@ function fmtDate(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr + 'T00:00:00');
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// Conference paper-submission deadlines -- hand-curated (see the .conf-strip
+// CSS comment above for why: there's no feed for this the way there is for
+// job postings). `due: null` means the CFP for that conference's next cycle
+// hasn't been published yet -- update it here once it is, rather than
+// guessing a date. Verified 2026-09-08; recheck CIRA/AoM periodically.
+const CONFERENCES = [
+  {
+    name: "iLERA",
+    full: "21st World Congress",
+    where: "Sydney, Australia &middot; Aug 30&ndash;Sep 3, 2027",
+    due: "2026-09-28",
+    label: "Abstracts due",
+    link: "https://www.ilera2027.com/pages/program/call-for-papers"
+  },
+  {
+    name: "LERA",
+    full: "79th Annual Meeting",
+    where: "Baltimore, MD &middot; Jun 10&ndash;13, 2027",
+    due: "2026-11-15",
+    label: "Papers/posters due",
+    link: "https://www.leraweb.org/call-2027-balt"
+  },
+  {
+    name: "CIRA",
+    full: "64th Annual Conference",
+    where: "Gatineau, QC &middot; Jun 8&ndash;10, 2027",
+    due: null,
+    label: "CFP not yet posted",
+    link: "https://www.cira-acri.ca/en-pastconferences"
+  },
+  {
+    name: "AoM",
+    full: "2027 Annual Meeting",
+    where: "Dates/location TBA",
+    due: null,
+    label: "CFP not yet announced",
+    link: "https://www.aom.org/events/annual-meeting/submitting/"
+  }
+];
+
+function renderConferences() {
+  const el = document.getElementById('confStrip');
+  const sorted = [...CONFERENCES].sort((a, b) => {
+    if (!a.due) return 1;
+    if (!b.due) return -1;
+    return daysUntil(a.due) - daysUntil(b.due);
+  });
+  el.innerHTML = sorted.map(c => {
+    if (!c.due) {
+      return `
+        <div class="conf-card">
+          <div class="conf-name">${c.name}</div>
+          <div class="conf-full">${c.full}</div>
+          <div class="conf-where">${c.where}</div>
+          <a class="conf-due tbd" href="${c.link}" target="_blank" rel="noopener">${c.label} &rarr;</a>
+        </div>
+      `;
+    }
+    const days = daysUntil(c.due);
+    const uClass = urgencyClass(days);
+    const daysText = days < 0 ? 'closed' : (days === 0 ? 'today' : `${days}d`);
+    return `
+      <div class="conf-card">
+        <div class="conf-name">${c.name}</div>
+        <div class="conf-full">${c.full}</div>
+        <div class="conf-where">${c.where}</div>
+        <a class="conf-due ${uClass}" href="${c.link}" target="_blank" rel="noopener">${c.label} ${fmtDate(c.due)} <span class="conf-days">(${daysText})</span> &rarr;</a>
+      </div>
+    `;
+  }).join('');
 }
 
 // Postings are sometimes stated as a monthly figure (common outside the
@@ -972,6 +1134,25 @@ btnCards.addEventListener('click', () => setView('cards'));
 btnTable.addEventListener('click', () => setView('table'));
 
 render();
+renderConferences();
+
+// Conference-deadlines section is collapsible on both mobile and desktop --
+// added 2026-09-08 at the user's request. Expanded by default (it's new
+// content worth seeing at least once); a returning visitor's choice is
+// remembered via localStorage the same way the Cards/Table preference is.
+const confToggle = document.getElementById('confToggle');
+const confStripEl = document.getElementById('confStrip');
+function setConfCollapsed(collapsed) {
+  confStripEl.hidden = collapsed;
+  confToggle.setAttribute('aria-expanded', String(!collapsed));
+  try { localStorage.setItem('lrhr-confs-collapsed', collapsed ? '1' : '0'); } catch (e) {}
+}
+confToggle.addEventListener('click', () => {
+  setConfCollapsed(confToggle.getAttribute('aria-expanded') === 'true');
+});
+let confCollapsed = false;
+try { confCollapsed = localStorage.getItem('lrhr-confs-collapsed') === '1'; } catch (e) {}
+setConfCollapsed(confCollapsed);
 
 // Cards is always the default on first load, desktop and mobile alike --
 // established 2026-09-02 at the user's explicit request. A returning
