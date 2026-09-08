@@ -520,6 +520,99 @@
 
     .grid { grid-template-columns: 1fr; gap: 14px; }
 
+    /* Table view, mobile (added 2026-09-08): collapse the desktop grid into
+       stacked row-cards instead of a horizontally-scrolling table -- a real
+       <table> at its 760px min-width left Salary/Teaching/Due (the whole
+       point of the urgency tracker) scrolled off-screen with no visible
+       hint more columns existed. Same <table>/<tr>/<td> markup renderTable()
+       always produced; only display modes change here, no new DOM and no
+       script changes beyond adding data-label attrs for the ::before labels
+       below. Each <tr> becomes a mini card; each <td> becomes a label/value
+       line via its data-label attribute (the university/link cells opt out
+       of the label treatment since they don't need one). */
+    .table-scroll { overflow-x: visible; border: none; box-shadow: none; background: transparent; }
+    table.jobs { display: block; width: 100%; min-width: 0; font-size: 14px; }
+    table.jobs thead { display: none; }
+    table.jobs tbody { display: flex; flex-direction: column; gap: 14px; }
+    table.jobs tr {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      background: var(--paper-raised);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 18px 16px;
+    }
+    table.jobs td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 0;
+      border-bottom: none;
+      white-space: normal;
+      text-align: right;
+    }
+    table.jobs td[data-label]::before {
+      content: attr(data-label);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      font-weight: 600;
+      flex: none;
+      text-align: left;
+    }
+    /* Region dropped from the mobile row-card entirely (still shown on
+       desktop -- this rule is scoped to the max-width:640px block, and
+       the <td> itself is untouched so desktop's column count/alignment
+       never changes) -- established 2026-09-08 at the user's request. */
+    table.jobs td[data-label="Region"] { display: none; }
+    /* A cell flagged data-blank by renderTable() (value was "—" or a
+       literal "N/A" from the sheet) is hidden on mobile only -- desktop
+       still shows the placeholder text as before. */
+    table.jobs td[data-blank="true"] { display: none; }
+    /* Groups a multi-tag value (currently just Area) into one flex item so
+       the td's own label/value justify-content:space-between splits it
+       into exactly two parts -- without this, each tag became its own flex
+       child and got spaced apart across the full row width instead of
+       sitting together next to the label. */
+    table.jobs td .value-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+    table.jobs td.university {
+      display: block;
+      max-width: none;
+      font-size: 17px;
+      text-align: left;
+      padding-bottom: 7px;
+      /* Reserves room for the "View" link, which floats top-right over
+         this header cell (see td.linkcell below) instead of sitting in
+         its own bottom row -- saves a full row's height per card. */
+      padding-right: 78px;
+      border-bottom: 1px solid var(--line);
+    }
+    table.jobs td.university .rank-sub { margin-top: 3px; font-size: 13px; }
+    /* Moved up into the header (top-right of the row-card, same corner
+       .card's urgency-tag uses) instead of its own bottom row+divider --
+       established 2026-09-08 at the user's request, to save vertical
+       space now that Region/blank rows are also gone. */
+    table.jobs td.linkcell {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      padding: 0;
+      margin: 0;
+      border-top: none;
+    }
+    table.jobs .tag { font-size: 11px; padding: 3px 8px; }
+
     .card { padding: 18px 18px 16px; gap: 14px; }
     /* No mobile-specific urgency-tag/h2 override needed anymore -- the base
        .card h2 padding-right (148px) is already sized for the tag's widest
@@ -803,23 +896,39 @@ function renderTable(filtered) {
     return;
   }
 
+  // A labeled mobile row-card cell hides itself entirely (see the
+  // [data-blank] rule in the max-width:640px block) when its value is a
+  // bare placeholder ("—") or a literal "N/A" straight from the sheet data
+  // -- rather than showing a label next to nothing. Desktop is unaffected;
+  // it still shows the placeholder text as before.
+  const isBlank = v => !v || /^(-|—|n\/a)$/i.test(String(v).trim());
+
   const rows = filtered.map(j => {
     const days = daysUntil(j.due);
     const uClass = urgencyClass(days);
     const daysText = days === null ? '' : (days < 0 ? ' (closed)' : (days === 0 ? ' (today)' : ` (${days}d)`));
-    const areaTags = sortAreas(j.area).map(a => `<span class="tag">${a}</span>`).join(' ');
+    const areaTags = sortAreas(j.area).map(a => `<span class="tag">${a}</span>`).join('');
     const salaryDisplay = annualizeSalary(j.salary) || '—';
     const dueText = j.due ? `${fmtDate(j.due)}${daysText}` : 'Open';
-    const teachingCell = j.teachingInferred ? `<span class="inferred">${j.teaching}<span class="star">*</span></span>` : (j.teaching || '—');
+    const teachingRaw = j.teaching || '—';
+    const teachingCell = j.teachingInferred ? `<span class="inferred">${teachingRaw}<span class="star">*</span></span>` : teachingRaw;
+    const salaryBlankAttr = isBlank(salaryDisplay) ? ' data-blank="true"' : '';
+    const teachingBlankAttr = isBlank(teachingRaw) ? ' data-blank="true"' : '';
+    // data-label feeds the mobile row-card layout (see the max-width:640px
+    // block below), which renders each td's label via CSS ::before instead
+    // of the <th> row -- desktop ignores the attribute entirely. Area's
+    // tags are wrapped in .value-group so the row-card's label/value flex
+    // split treats them as one item (otherwise multiple tags each become
+    // their own flex child and get spaced apart by justify-content).
     return `
       <tr>
         <td class="university">${j.university}<span class="rank-sub">${j.rank} &middot; ${j.tt}</span></td>
-        <td>${areaTags}</td>
-        <td>${j.region}</td>
-        <td class="num">${salaryDisplay}</td>
-        <td>${teachingCell}</td>
-        <td class="num"><span class="d-days ${uClass}">${dueText}</span></td>
-        <td><a class="view" href="${j.link}" target="_blank" rel="noopener">View &rarr;</a></td>
+        <td data-label="Area"><span class="value-group">${areaTags}</span></td>
+        <td data-label="Region">${j.region}</td>
+        <td class="num" data-label="Salary"${salaryBlankAttr}>${salaryDisplay}</td>
+        <td data-label="Teaching"${teachingBlankAttr}>${teachingCell}</td>
+        <td class="num" data-label="Due"><span class="d-days ${uClass}">${dueText}</span></td>
+        <td class="linkcell"><a class="view" href="${j.link}" target="_blank" rel="noopener">View &rarr;</a></td>
       </tr>
     `;
   }).join('');
