@@ -742,7 +742,7 @@
   <div class="stat-strip">
     <div class="stat"><span class="num" id="statActive">–</span><span class="label">Active postings</span></div>
     <div class="stat"><span class="num" id="statRegions">–</span><span class="label">Regions</span></div>
-    <div class="stat"><span class="num">178</span><span class="label">Boards monitored</span></div>
+    <div class="stat"><span class="num">179</span><span class="label">Boards monitored</span></div>
   </div>
 
   <div class="controls">
@@ -784,18 +784,21 @@
   <p class="inferred-note" id="inferredNote" hidden><span class="star">*</span> Teaching load marked with an asterisk is inferred from the institution's Carnegie classification (a rough bucket &mdash; R1 &asymp; 2-2, R2 &asymp; 2-3, teaching-focused &asymp; 3-3). A value with no marker was stated directly in the ad.</p>
 
   <footer>
-    <span>Data synced from the Active Jobs sheet · <span id="genDate">9 Sep 2026</span></span>
+    <span>Data synced from the Active Jobs sheet · <span id="genDate">10 Sep 2026</span></span>
     <span>Questions about this list? <a class="contact" href="mailto:maffie@cornell.edu">maffie@cornell.edu</a></span>
   </footer>
 </div>
 
 <script>
-const TODAY = new Date('2026-09-09T00:00:00');
+const TODAY = new Date('2026-09-10T00:00:00');
 
 // Labor Relations and Employment Relations are never subordinated to HR in
 // this listing -- both the filter-chip order and each card's tag order
-// follow this priority, LR/ER first.
-const AREA_PRIORITY = ["LR", "ER", "HR", "OB", "MGMT"];
+// follow this priority, LR/ER first. "Labor/Tech" (added 2026-09-09) is the
+// Area for the separate infosci-labor-tech track (see run.py's
+// INFOSCI_LABOR_TECH_PATTERN) -- placed last since it's an adjacent niche,
+// not part of the core ER/HR/OB continuum the rest of this list orders.
+const AREA_PRIORITY = ["LR", "ER", "HR", "OB", "MGMT", "Labor/Tech"];
 function sortAreas(list) {
   return [...list].sort((a, b) => {
     const ai = AREA_PRIORITY.indexOf(a), bi = AREA_PRIORITY.indexOf(b);
