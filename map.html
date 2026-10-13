@@ -195,7 +195,7 @@ const SITES = [{"name": "Universidad Nacional Arturo Jauretche", "country": "Arg
 // Google Form for suggestions ({viewform, action, fields, other}), or null to hide the suggest UI.
 const FORM = {"viewform": "https://docs.google.com/forms/d/e/1FAIpQLScRMKtCLebia_eb1MaLFvAZegci24nZbatepUD4-Dn5o45uNQ/viewform", "action": "https://docs.google.com/forms/d/e/1FAIpQLScRMKtCLebia_eb1MaLFvAZegci24nZbatepUD4-Dn5o45uNQ/formResponse", "fields": {"change": "entry.1755746826", "program": "entry.1244474855", "contact": "entry.1514272738"}};
 // Editor endpoint ({endpoint}: Apps Script web app that writes to the sheet), or null for no editor mode.
-const EDIT = null;
+const EDIT = {"endpoint": "https://script.google.com/macros/s/AKfycbwwk9bncvRYQ3dDb9EzPyOdpXobHnpP0hTPean5nQXiGcEuyBD2GOFumVf4-GWbUSsLDA/exec"};
 // Live, CORS-enabled CSV of the IR programs tab: read on every load so edits show immediately.
 const SHEET_CSV = "https://docs.google.com/spreadsheets/d/1BAfOqeVES2_yehz__bAKgacBxXdgM7Ba7Z2NKOHNeDs/gviz/tq?tqx=out:csv&gid=187135351";
 // Placeholder rows (aggregators, country-level notes) that are never pinned.
