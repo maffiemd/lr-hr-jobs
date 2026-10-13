@@ -578,14 +578,14 @@ function renderEditorBar() {
   } else {
     const b = el("button", { type: "button", class: "suggest-btn" }, "Editor sign-in");
     b.addEventListener("click", () => {
-      const code = el("input", { required: "", autocomplete: "off", placeholder: "Your editor access code" });
+      const code = el("input", { required: "", type: "password", autocomplete: "current-password", placeholder: "Your editor password" });
       const go = el("button", { type: "submit" }, "Sign in");
       const msg = el("span", { class: "note" });
-      const f = el("form", { class: "suggest add-panel" }, el("label", {}, "Access code", code), el("div", { class: "row" }, go, msg));
+      const f = el("form", { class: "suggest add-panel" }, el("label", {}, "Editor password", code), el("div", { class: "row" }, go, msg));
       f.addEventListener("submit", async e => {
         e.preventDefault(); go.disabled = true; msg.textContent = "Checking…";
         if (await signIn(code.value.trim())) return;
-        go.disabled = false; msg.textContent = "That code wasn't recognized.";
+        go.disabled = false; msg.textContent = "That password wasn't recognized.";
       });
       editBar.replaceChildren(f); code.focus();
     });
