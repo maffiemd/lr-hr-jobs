@@ -6,26 +6,26 @@
 <title>IR Programs Map</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
-  /* Light-only palette (2026-10-13, at the user's request): off-white page, near-black text.
-     Category hues are a validated 4-color set (dataviz validate_palette.js, --pairs all on white):
-     worst CVD dE 9.2, worst normal-vision dE 16.3. Teal is 2.8:1 on white, so pins keep a
-     white ring and every school is also named in the list below the map. */
   :root {
-    --paper: #fafaf8;
+    --paper: #ffffff;     /* page background: white (2026-10-13, at the user's request) */
     --paper-raised: #ffffff;
-    --ink: #111111;
-    --ink-soft: #3d3d3b;
-    --ink-faint: #6b6b67;
-    --line: #dcdcd7;
-    --link: #1f5fa8;
-    --program: #2a78d6;  --program-wash: #e3eefb;   /* IR / labour relations program */
-    --labor: #1baf7a;    --labor-wash: #dcf4ea;     /* Labor studies program */
-    --friendly: #eb6834; --friendly-wash: #fde5da;  /* IR-friendly business school */
-    --hronly: #4a3aa7;   --hronly-wash: #e6e3f5;    /* HR/OB/OT only */
+    --ink: #000000;       /* page text: black */
+    --ink-soft: #3a3a3a;
+    --ink-faint: #5c5648;
+    --line: #d9d3c0;
+    --program: #8a5f16;
+    --program-wash: #f3e6c8;
+    --friendly: #3d6b8a;
+    --friendly-wash: #dfeaf1;
+    --hronly: #7a4a8c;
+    --hronly-wash: #efe3f4;
+    --labor: #2f6e4f;
+    --labor-wash: #dcefe3;
     --marker-edge: #ffffff;
-    --row-hover: #f1f1ee;
-    --risk: #5f5f5b;     --risk-wash: #ececea;      /* status: suspended / dormant / hidden (neutral, not a category hue) */
-    --shadow: 0 1px 2px rgba(17,17,17,0.06), 0 8px 24px -12px rgba(17,17,17,0.14);
+    --row-hover: #f3efe3;
+    --risk: #a8402a;
+    --risk-wash: #f6ddd5;
+    --shadow: 0 1px 2px rgba(18,18,18,0.08), 0 8px 24px -12px rgba(18,18,18,0.16);
     --radius: 14px;
     color-scheme: light;
   }
@@ -38,7 +38,7 @@
   }
   .wrap { max-width: 1200px; margin: 0 auto; padding: 28px 16px 48px; }
   header h1 { font-size: clamp(1.5rem, 3.5vw, 2.1rem); margin: 0 0 4px; letter-spacing: -0.01em; }
-  header p { margin: 0; color: var(--ink-faint); font-size: 0.95rem; max-width: 70ch; }
+  header p { margin: 0; color: var(--ink); font-size: 0.95rem; max-width: 70ch; }
 
   .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 14px; }
   .chip {
@@ -73,13 +73,12 @@
   .prog:first-of-type { border-top: 0; padding-top: 0; }
   .tag {
     display: inline-block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em;
-    padding: 2px 8px; border-radius: 999px; background: var(--wash); color: var(--ink); margin-bottom: 4px;
-    box-shadow: inset 3px 0 0 var(--c);
+    padding: 2px 8px; border-radius: 999px; background: var(--wash); color: var(--c); margin-bottom: 4px;
   }
   .prog .unit { font-weight: 600; }
   .prog .deg, .prog .status, .prog .sig { color: var(--ink-soft); }
   .prog .status { font-style: italic; color: var(--ink-faint); }
-  .prog a, .pop a { color: var(--link); }
+  .prog a { color: var(--friendly); }
   .approx { color: var(--ink-faint); font-size: 0.8rem; }
   .activity {
     display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;
@@ -113,7 +112,7 @@
   .country li button:hover, .country li button:focus-visible { background: var(--row-hover); }
   .country li .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c); transform: translateY(-1px); }
   .country li[hidden] { display: none; }
-  footer { margin-top: 28px; color: var(--ink-faint); font-size: 0.82rem; }
+  footer { margin-top: 28px; color: var(--ink); font-size: 0.82rem; }
 
   /* Suggest-a-change UI (submissions go to a Google Form; nothing changes until reviewed) */
   .suggest-btn {
@@ -210,7 +209,7 @@ function el(tag, attrs = {}, ...kids) {
   return n;
 }
 function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-const dark = () => false;  // light-only palette
+const dark = () => false;  // page is always white; light basemap
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
   set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} },
