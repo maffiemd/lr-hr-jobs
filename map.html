@@ -6,46 +6,28 @@
 <title>IR Programs Map</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
+  /* Light-only palette (2026-10-13, at the user's request): off-white page, near-black text.
+     Category hues are a validated 4-color set (dataviz validate_palette.js, --pairs all on white):
+     worst CVD dE 9.2, worst normal-vision dE 16.3. Teal is 2.8:1 on white, so pins keep a
+     white ring and every school is also named in the list below the map. */
   :root {
-    --paper: #fcfbf8;
+    --paper: #fafaf8;
     --paper-raised: #ffffff;
-    --ink: #121212;
-    --ink-soft: #3a3a3a;
-    --ink-faint: #5c5648;
-    --line: #d9d3c0;
-    --program: #8a5f16;
-    --program-wash: #f3e6c8;
-    --friendly: #3d6b8a;
-    --friendly-wash: #dfeaf1;
-    --hronly: #7a4a8c;
-    --hronly-wash: #efe3f4;
-    --labor: #2f6e4f;
-    --labor-wash: #dcefe3;
+    --ink: #111111;
+    --ink-soft: #3d3d3b;
+    --ink-faint: #6b6b67;
+    --line: #dcdcd7;
+    --link: #1f5fa8;
+    --program: #2a78d6;  --program-wash: #e3eefb;   /* IR / labour relations program */
+    --labor: #1baf7a;    --labor-wash: #dcf4ea;     /* Labor studies program */
+    --friendly: #eb6834; --friendly-wash: #fde5da;  /* IR-friendly business school */
+    --hronly: #4a3aa7;   --hronly-wash: #e6e3f5;    /* HR/OB/OT only */
     --marker-edge: #ffffff;
-    --row-hover: #f3efe3;
-    --risk: #a8402a;
-    --risk-wash: #f6ddd5;
-    --shadow: 0 1px 2px rgba(18,18,18,0.08), 0 8px 24px -12px rgba(18,18,18,0.16);
+    --row-hover: #f1f1ee;
+    --risk: #5f5f5b;     --risk-wash: #ececea;      /* status: suspended / dormant / hidden (neutral, not a category hue) */
+    --shadow: 0 1px 2px rgba(17,17,17,0.06), 0 8px 24px -12px rgba(17,17,17,0.14);
     --radius: 14px;
     color-scheme: light;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper: #171510; --paper-raised: #211e17; --ink: #f1ecdf; --ink-soft: #c9c1aa; --ink-faint: #8d8570; --line: #3d3626;
-      --program: #d9a53d; --program-wash: #362b13; --friendly: #7fb3d5; --friendly-wash: #1c2e38;
-      --hronly: #c39ad8; --hronly-wash: #2e2236; --labor: #7fc79f; --labor-wash: #1a3226; --marker-edge: #171510; --row-hover: #2a2519;
-      --risk: #e07657; --risk-wash: #3a2119;
-      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 30px -14px rgba(0,0,0,0.55);
-      color-scheme: dark;
-    }
-  }
-  :root[data-theme="dark"] {
-    --paper: #171510; --paper-raised: #211e17; --ink: #f1ecdf; --ink-soft: #c9c1aa; --ink-faint: #8d8570; --line: #3d3626;
-    --program: #d9a53d; --program-wash: #362b13; --friendly: #7fb3d5; --friendly-wash: #1c2e38;
-    --hronly: #c39ad8; --hronly-wash: #2e2236; --labor: #7fc79f; --labor-wash: #1a3226; --marker-edge: #171510; --row-hover: #2a2519;
-      --risk: #e07657; --risk-wash: #3a2119;
-    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 30px -14px rgba(0,0,0,0.55);
-    color-scheme: dark;
   }
 
   * { box-sizing: border-box; }
@@ -91,12 +73,13 @@
   .prog:first-of-type { border-top: 0; padding-top: 0; }
   .tag {
     display: inline-block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em;
-    padding: 2px 8px; border-radius: 999px; background: var(--wash); color: var(--c); margin-bottom: 4px;
+    padding: 2px 8px; border-radius: 999px; background: var(--wash); color: var(--ink); margin-bottom: 4px;
+    box-shadow: inset 3px 0 0 var(--c);
   }
   .prog .unit { font-weight: 600; }
   .prog .deg, .prog .status, .prog .sig { color: var(--ink-soft); }
   .prog .status { font-style: italic; color: var(--ink-faint); }
-  .prog a { color: var(--friendly); }
+  .prog a, .pop a { color: var(--link); }
   .approx { color: var(--ink-faint); font-size: 0.8rem; }
   .activity {
     display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;
@@ -227,7 +210,7 @@ function el(tag, attrs = {}, ...kids) {
   return n;
 }
 function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-const dark = () => cssVar("--paper").toLowerCase() === "#171510";
+const dark = () => false;  // light-only palette
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
   set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} },
@@ -524,7 +507,6 @@ for (const s of SITES) {
   s.marker = L.circleMarker([s.lat, s.lon]).bindPopup(() => popupFor(s), { maxWidth: 340 })
     .bindTooltip(s.name, { direction: "top", offset: [0, -6] });
 }
-window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { setTiles(); render(); });
 
 // ---- Filters, list, render ----
 const active = new Set(CATS.map(c => c.key));
